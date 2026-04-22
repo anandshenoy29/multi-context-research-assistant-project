@@ -1,0 +1,219 @@
+{
+  "name": "Multi-Context Research Assistant : Frontend Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=={{ $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "You are a highly focused, strict Research Assistant. Your SOLE purpose is to answer questions based EXACTLY on the information retrieved from the provided research document via your Pinecone Vector Store tool.\n\nRules of Engagement:\n\nMandatory Tool Usage: You must ALWAYS use your retrieval tool to search the document before answering any user query, regardless of how simple the question seems.\n\nAbsolute Zero Outside Knowledge: You have amnesia regarding the outside world. You know absolutely nothing beyond what the retrieval tool provides you. Do NOT use your pre-trained knowledge to fill in gaps, provide context, or answer unrelated queries (e.g., questions about sleep, food, general history, etc.).\n\nStrict Adherence to Data: If the retrieval tool returns text, synthesize that text into a clear, structured answer. Do not add outside facts to the synthesis.\n\nHandling Missing Information: If the retrieval tool returns no relevant results, or if the user asks a question completely unrelated to the retrieved text, you must completely refuse to answer.\n\nFallback Script:\nIf the answer cannot be explicitly found in the retrieved document context, you MUST reply with exactly this message:\n\"I apologize, but my knowledge is strictly limited to the provided music research paper. I do not have any information regarding this topic.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        264,
+        -80
+      ],
+      "id": "a0debb67-1759-4907-bffe-e6975e28fd9b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Retrieve data when the user asks for relevant data about the research documents. Once the data is found and retrieved, give it in a well structured and simple language answer format.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "YOUR_INDEX_NAME",
+          "mode": "list",
+          "cachedResultName": "YOUR_INDEX_NAME"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        144
+      ],
+      "id": "a531a0c8-9bf9-48d2-a9ac-ee7b981874eb",
+      "name": "Pinecone VectorDB",
+      "credentials": {
+        "pineconeApi": {
+          "id": "YOUR_PINECONE_ID",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        544,
+        352
+      ],
+      "id": "4f92d0fc-fce2-49c7-80b1-d19848cee972",
+      "name": "OpenAI Embedding Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_API_ID",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        144
+      ],
+      "id": "9db8bcf8-a048-4353-8af1-f5c110be11d6",
+      "name": "OpenAI GPT Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_API_ID",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -80
+      ],
+      "id": "5604d6cb-c52c-4a9f-9011-ba99d1ede0c9",
+      "name": "Webhook recieving user query",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        -80
+      ],
+      "id": "44f6af1e-447f-462d-83da-f0717ddc3b70",
+      "name": "Webhook transferring response back to user"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "streamlit-session"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        144
+      ],
+      "id": "e11d4b73-7b77-4170-9ca2-28132973174b",
+      "name": "Chat Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Webhook transferring response back to user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone VectorDB": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embedding Model": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone VectorDB",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook recieving user query": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d7d90cc4-a4ac-41f2-975d-7b5792ed2dd4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "AIVwtbeKuCWivjNm",
+  "tags": []
+}
