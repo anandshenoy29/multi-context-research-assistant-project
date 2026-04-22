@@ -53,12 +53,12 @@ To run the streamlit application locally, ensure that you have the following ins
 
 Click to watch the demo!
 <div align="center">
-  <a href="https://your-demo-link-here">
+  <a href="https://docs.google.com/videos/d/1gWDOkvyLlQjsyZ7awJIpTgyaxZqAQvUYxh-qKu9jQ4I/edit?usp=drive_link">
     <img src="demo-1.png" alt="Click to Watch" style="width:100%;">
   </a>
 </div>
 <div align="center">
-  <a href="https://your-demo-link-here">
+  <a href="https://docs.google.com/videos/d/1gWDOkvyLlQjsyZ7awJIpTgyaxZqAQvUYxh-qKu9jQ4I/edit?usp=drive_link">
     <img src="demo-2.png" alt="Click to Watch" style="width:100%;">
   </a>
 </div>
